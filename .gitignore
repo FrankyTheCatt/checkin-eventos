@@ -1,0 +1,21 @@
+# Entornos y secretos
+.env
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Node / Angular
+node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Editores y sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
