@@ -1,0 +1,56 @@
+<div class="list-container">
+  <div class="header">
+    <h2>Explorar Eventos</h2>
+    
+   <button mat-flat-button color="primary" (click)="abrirModalCrear()">
+      <mat-icon>add</mat-icon> Crear Evento
+    </button>
+  </div>
+  
+  <mat-form-field appearance="outline" class="search-bar">
+    <mat-label>Buscar por título o lugar...</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input matInput [ngModel]="searchQuery()" (ngModelChange)="actualizarBusqueda($event)">
+  </mat-form-field>
+
+  <div *ngIf="cargando()" class="loading-state">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando eventos...</p>
+  </div>
+
+  <mat-card *ngIf="!cargando() && events().length === 0" class="empty-state">
+    <mat-card-content>
+      No se encontraron eventos que coincidan con tu búsqueda.
+    </mat-card-content>
+  </mat-card>
+
+  <table mat-table [dataSource]="events()" class="mat-elevation-z8" *ngIf="!cargando() && events().length > 0">
+    
+    <ng-container matColumnDef="title">
+      <th mat-header-cell *matHeaderCellDef> Título </th>
+      <td mat-cell *matCellDef="let ev"> <strong>{{ev.title}}</strong> </td>
+    </ng-container>
+
+    <ng-container matColumnDef="location_name">
+      <th mat-header-cell *matHeaderCellDef> Ubicación </th>
+      <td mat-cell *matCellDef="let ev"> {{ev.location_name}} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="starts_at">
+      <th mat-header-cell *matHeaderCellDef> Fecha </th>
+      <td mat-cell *matCellDef="let ev"> {{ ev.starts_at | date:'short' }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef> Acciones </th>
+      <td mat-cell *matCellDef="let ev">
+        <button mat-stroked-button color="primary" [routerLink]="['/eventos', ev.id]">
+          Ver Detalles
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+    <tr mat-row *matRowDef="let row; columns: columnas;"></tr>
+  </table>
+</div>
