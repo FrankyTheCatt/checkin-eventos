@@ -26,7 +26,7 @@ checkin-eventos/
 │   │   ├── routers/
 │   │   └── schemas/
 │   └── tests/
-├── frontend/           Angular (lo crea el paquete 3)
+├── frontend/           Angular 22 + Angular Material
 ├── docs/
 ├── docker-compose.yml  PostgreSQL para desarrollo
 └── .env.example
@@ -69,7 +69,16 @@ El backend lee el `.env` de la raíz del repositorio.
 
 ### 4. Frontend
 
-Se completa cuando esté listo el paquete 3 (ver `docs/DIVISION.md`).
+Requiere Node.js 22.22.3 o superior (24.15+ recomendado). Con el backend y la base de datos ya iniciados:
+
+```bash
+cd frontend
+npm ci
+npm start -- --host 127.0.0.1 --port 4200
+```
+
+Abre http://127.0.0.1:4200. La URL de la API está en `frontend/src/environments/environment.ts`
+(`http://127.0.0.1:8000/api`). Más detalles en [`frontend/README.md`](frontend/README.md).
 
 ## Pruebas del backend
 
