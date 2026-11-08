@@ -35,7 +35,7 @@ Entidad principal del CRUD. Un usuario solo puede modificar o eliminar los event
 |---|---|---|---|
 | POST | `/api/events/{id}/attendances` | Sí | Registra la asistencia del usuario. Cuerpo opcional `{ latitude, longitude }`. 409 si ya estaba registrado |
 | GET | `/api/events/{id}/attendances` | Sí | Asistentes del evento (solo el dueño) |
-| GET | `/api/attendances/me` | Sí | Eventos a los que asistió el usuario del token |
+| GET | `/api/attendances/me` | Sí | Registros de asistencia del usuario del token |
 
 ## Modelos
 
@@ -61,3 +61,13 @@ Entidad principal del CRUD. Un usuario solo puede modificar o eliminar los event
 
 Las tablas están definidas en `backend/app/models.py` (paquete 1). Si alguien necesita cambiar una columna,
 lo avisa al grupo antes, porque afecta a los demás.
+
+## Validaciones de eventos
+
+El cuerpo de POST y PUT contiene `title`, `description`, `location_name`, `latitude`, `longitude`, `radius_m`, `starts_at` y `ends_at`. PUT reemplaza los campos editables; `id`, `owner_id`, `qr_code` y `attendance_count` son de solo lectura y no se envían.
+
+El título se recorta y admite de 1 a 150 caracteres; descripción hasta 2000 y lugar hasta 200. Las fechas deben incluir zona horaria, se normalizan a UTC y el término debe ser posterior al inicio. Latitud (-90 a 90) y longitud (-180 a 180) se envían juntas o ambas como null. El radio admite enteros entre 1 y 100000.
+
+La búsqueda admite hasta 200 caracteres. `skip` es un entero mayor o igual a cero; `limit` admite de 1 a 100, con 50 por defecto. La respuesta es una lista ordenada por inicio e ID, sin total global. `attendance_count` cuenta los registros existentes.
+
+Crear evento y registrar asistencia responden 201. Todas las rutas de eventos y asistencias requieren JWT. Solo el dueño consulta asistentes, edita y elimina. Una segunda asistencia del mismo usuario responde 409. Eliminar un evento elimina también sus asistencias.

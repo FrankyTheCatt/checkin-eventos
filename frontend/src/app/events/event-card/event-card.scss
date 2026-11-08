@@ -1,0 +1,36 @@
+:host,
+mat-card {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+}
+mat-card {
+  flex: 1;
+}
+mat-card-header,
+mat-card-content {
+  overflow-wrap: anywhere;
+}
+mat-card-content {
+  flex: 1;
+  padding-top: 16px;
+}
+.description {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-line;
+}
+p {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+mat-icon {
+  flex-shrink: 0;
+  color: var(--mat-sys-primary);
+}
+mat-card-actions {
+  padding: 16px;
+}

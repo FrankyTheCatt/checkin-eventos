@@ -7,16 +7,23 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../auth';
+import { apiError } from '../../shared/api-error';
+import { fullName, passwordBytes } from '../registration-validators';
 
 @Component({
   selector: 'app-registro',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, RouterModule,
-    MatInputModule, MatButtonModule, MatCardModule, MatSnackBarModule
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    MatInputModule,
+    MatButtonModule,
+    MatCardModule,
+    MatSnackBarModule,
   ],
   templateUrl: './registro.html',
-  styleUrl: './registro.scss'
+  styleUrl: './registro.scss',
 })
 export class Registro {
   private fb = inject(FormBuilder);
@@ -24,28 +31,36 @@ export class Registro {
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
 
-  registroForm = this.fb.group({
-    full_name: ['', [Validators.required, Validators.minLength(2)]],
+  registroForm = this.fb.nonNullable.group({
+    full_name: [
+      '',
+      [Validators.required, Validators.minLength(2), Validators.maxLength(120), fullName],
+    ],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]]
+    password: [
+      '',
+      [Validators.required, Validators.minLength(8), Validators.maxLength(72), passwordBytes],
+    ],
   });
 
   cargando = signal(false);
 
   onSubmit() {
     if (this.registroForm.invalid) return;
-    
+
     this.cargando.set(true);
-    this.authService.registrar(this.registroForm.value).subscribe({
+    this.authService.registrar(this.registroForm.getRawValue()).subscribe({
       next: () => {
-        this.snackBar.open('Registro exitoso. Por favor inicia sesión.', 'Cerrar', { duration: 4000 });
+        this.snackBar.open('Registro exitoso. Por favor inicia sesión.', 'Cerrar', {
+          duration: 4000,
+        });
         this.router.navigate(['/login']);
       },
       error: (err) => {
         this.cargando.set(false);
-        const mensaje = err.error?.detail || 'Error al registrar cuenta';
+        const mensaje = apiError(err, 'Error al registrar cuenta');
         this.snackBar.open(mensaje, 'Cerrar', { duration: 3000 });
-      }
+      },
     });
   }
 }

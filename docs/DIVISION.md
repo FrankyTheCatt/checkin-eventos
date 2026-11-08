@@ -8,9 +8,9 @@ puede trabajar en paralelo sin esperar a los demás.
 | # | Paquete | Responsable | Carpeta | Estado |
 |---|---|---|---|---|
 | 1 | Base del backend: modelos, base de datos y autenticación JWT | Nicolás | `backend/app/{config,database,models,security,deps}.py`, `routers/auth.py` | Listo |
-| 2 | Backend de eventos y asistencias: CRUD, validaciones y pruebas | _por asignar_ | `backend/app/routers/events.py`, `routers/attendances.py`, `schemas/event.py` | Pendiente |
-| 3 | Frontend base: proyecto Angular, navegación, sesión, guard e interceptor | _por asignar_ | `frontend/` (crea el proyecto) | Pendiente |
-| 4 | Frontend de eventos: listado, detalle, formularios y estados de la interfaz | _por asignar_ | `frontend/src/app/events/` | Pendiente |
+| 2 | Backend de eventos y asistencias: CRUD, validaciones y pruebas | _por asignar_ | `backend/app/routers/events.py`, `routers/attendances.py`, `schemas/event.py` | Implementado en integración local |
+| 3 | Frontend base: proyecto Angular, navegación, sesión, guard e interceptor | _por asignar_ | `frontend/` (crea el proyecto) | Implementado en integración local |
+| 4 | Frontend de eventos: listado, detalle, formularios y estados de la interfaz | _por asignar_ | `frontend/src/app/events/` | Implementado en integración local |
 
 Pueden intercambiar paquetes, pero cada integrante debe quedar con uno y anotar su nombre en esta tabla.
 
@@ -111,3 +111,7 @@ Antes de entregar, cada integrante debe poder explicar con sus palabras este flu
 
 Enlace al repositorio con `README.md` que explique cómo ejecutar frontend, backend y base de datos,
 sin contraseñas ni secretos dentro del repositorio. Fecha límite: domingo 8 de noviembre de 2026, 23:59.
+
+## Integración local
+
+Los paquetes 2, 3 y 4 se completaron en la rama local `cambios`, basada en `frontend`. El contrato y las tareas originales se conservan como referencia. La validación está en [VERIFICACION.md](VERIFICACION.md).

@@ -1,37 +1,44 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, httpResource } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { Attendance, EventPayload, EventRecord } from './event.models';
 
 @Injectable({ providedIn: 'root' })
 export class EventsService {
-  private http = inject(HttpClient);
-  private url = `${environment.apiUrl}/events`;
+  private readonly http = inject(HttpClient);
+  private readonly url = environment.apiUrl + '/events';
 
-  getEvents(search: string = '', skip: number = 0, limit: number = 50) {
-    let params = new HttpParams().set('skip', skip).set('limit', limit);
-    if (search) {
-      params = params.set('search', search);
-    }
-    return this.http.get<any[]>(this.url, { params });
+  listResource(query: () => { search: string; skip: number; limit: number }) {
+    return httpResource<EventRecord[]>(() => ({ url: this.url, params: query() }));
   }
 
-  getEvent(id: number) {
-    return this.http.get<any>(`${this.url}/${id}`);
+  detailResource(id: () => number | undefined) {
+    return httpResource<EventRecord>(() => (id() ? this.url + '/' + id() : undefined));
   }
 
-  createEvent(event: any) {
-    return this.http.post<any>(this.url, event);
+  attendeesResource(id: () => number | undefined) {
+    return httpResource<Attendance[]>(() =>
+      id() ? this.url + '/' + id() + '/attendances' : undefined,
+    );
   }
 
-  updateEvent(id: number, event: any) {
-    return this.http.put<any>(`${this.url}/${id}`, event);
+  myAttendancesResource() {
+    return httpResource<Attendance[]>(() => environment.apiUrl + '/attendances/me');
+  }
+
+  createEvent(event: EventPayload) {
+    return this.http.post<EventRecord>(this.url, event);
+  }
+
+  updateEvent(id: number, event: EventPayload) {
+    return this.http.put<EventRecord>(this.url + '/' + id, event);
   }
 
   deleteEvent(id: number) {
-    return this.http.delete(`${this.url}/${id}`);
+    return this.http.delete<void>(this.url + '/' + id);
   }
 
-  attendEvent(id: number, coords?: {latitude: number, longitude: number}) {
-    return this.http.post(`${this.url}/${id}/attendances`, coords || {});
+  attendEvent(id: number) {
+    return this.http.post<Attendance>(this.url + '/' + id + '/attendances', {});
   }
 }

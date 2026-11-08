@@ -5,24 +5,32 @@
     </mat-card-header>
     <mat-card-content>
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field subscriptSizing="dynamic" appearance="outline" class="full-width">
           <mat-label>Correo electrónico</mat-label>
-          <input matInput type="email" formControlName="email" placeholder="ejemplo@correo.com">
-          <mat-error *ngIf="loginForm.get('email')?.hasError('required')">El correo es obligatorio</mat-error>
+          <input matInput type="email" formControlName="email" placeholder="ejemplo@correo.com" />
+          <mat-error *ngIf="loginForm.get('email')?.hasError('required')"
+            >El correo es obligatorio</mat-error
+          >
           <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Formato inválido</mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
+        <mat-form-field subscriptSizing="dynamic" appearance="outline" class="full-width">
           <mat-label>Contraseña</mat-label>
-          <input matInput type="password" formControlName="password">
-          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">La contraseña es obligatoria</mat-error>
+          <input matInput type="password" formControlName="password" />
+          <mat-error *ngIf="loginForm.get('password')?.hasError('required')"
+            >La contraseña es obligatoria</mat-error
+          >
         </mat-form-field>
 
-        <button mat-flat-button color="primary" type="submit" class="full-width" [disabled]="loginForm.invalid || cargando()">
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          class="full-width"
+          [disabled]="loginForm.invalid || cargando()"
+        >
           {{ cargando() ? 'Iniciando...' : 'Entrar' }}
         </button>
-
       </form>
       <div class="auth-links">
         <p>¿No tienes cuenta? <a routerLink="/registro">Regístrate aquí</a></p>

@@ -1,0 +1,15 @@
+section {
+  padding: 2.5rem 1rem;
+  text-align: center;
+  border-radius: 16px;
+  background: var(--mat-sys-surface-container-low);
+}
+mat-icon {
+  color: var(--mat-sys-primary);
+}
+h2 {
+  margin: 12px 0 8px;
+}
+p {
+  color: var(--mat-sys-on-surface-variant);
+}

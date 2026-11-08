@@ -1,0 +1,16 @@
+<mat-card appearance="outlined"
+  ><mat-card-header
+    ><mat-card-title>{{ event().title }}</mat-card-title
+    ><mat-card-subtitle>{{
+      event().location_name || 'Lugar por confirmar'
+    }}</mat-card-subtitle></mat-card-header
+  ><mat-card-content
+    ><p class="description">{{ event().description || 'Sin descripción' }}</p>
+    <p><mat-icon>schedule</mat-icon>{{ event().starts_at | date: 'medium' }}</p>
+    <p><mat-icon>group</mat-icon>{{ event().attendance_count }} asistencias</p></mat-card-content
+  ><mat-card-actions
+    ><a mat-stroked-button [routerLink]="['/eventos', event().id]"
+      >Ver detalles</a
+    ></mat-card-actions
+  ></mat-card
+>

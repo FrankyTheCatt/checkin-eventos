@@ -1,21 +1,17 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { Registro } from './registro';
 
 describe('Registro', () => {
-  let component: Registro;
-  let fixture: ComponentFixture<Registro>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  it('bloquea el envío de un formulario vacío', () => {
+    TestBed.configureTestingModule({
       imports: [Registro],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(Registro);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
+      providers: [provideRouter([]), provideHttpClient()],
+    });
+    const component = TestBed.createComponent(Registro).componentInstance;
+    expect(component.registroForm.invalid).toBe(true);
+    component.onSubmit();
+    expect(component.cargando()).toBe(false);
   });
 });

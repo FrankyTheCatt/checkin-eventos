@@ -1,21 +1,17 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { Login } from './login';
 
 describe('Login', () => {
-  let component: Login;
-  let fixture: ComponentFixture<Login>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  it('bloquea el envío de un formulario vacío', () => {
+    TestBed.configureTestingModule({
       imports: [Login],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(Login);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
+      providers: [provideRouter([]), provideHttpClient()],
+    });
+    const component = TestBed.createComponent(Login).componentInstance;
+    expect(component.loginForm.invalid).toBe(true);
+    component.onSubmit();
+    expect(component.cargando()).toBe(false);
   });
 });

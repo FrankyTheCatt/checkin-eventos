@@ -1,43 +1,81 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
-from typing import List
+import secrets
+from typing import Annotated
 
-# Importamos la base de datos y los modelos (verifica que se llamen así en tus archivos)
-from app.database import get_session
-from app.models import Event
-from app.deps import get_current_user
+from fastapi import APIRouter, HTTPException, Query, Response, status
+from sqlmodel import func, select
 
-import uuid
+from app.deps import CurrentUser, SessionDep
+from app.models import Attendance, Event
+from app.schemas.event import EventCreate, EventRead, EventUpdate
 
 router = APIRouter(prefix="/events", tags=["events"])
 
-@router.get("")
-def listar_eventos(search: str = "", skip: int = 0, limit: int = 50, db: Session = Depends(get_session)):
+
+def find_event(event_id: int, session) -> Event:
+    event = session.get(Event, event_id)
+    if event is None:
+        raise HTTPException(404, "Evento no encontrado")
+    return event
+
+
+def require_owner(event: Event, user) -> None:
+    if event.owner_id != user.id:
+        raise HTTPException(403, "Solo el dueño puede realizar esta acción")
+
+
+def read_event(event: Event, session) -> EventRead:
+    count = session.exec(select(func.count()).select_from(Attendance).where(Attendance.event_id == event.id)).one()
+    return EventRead.model_validate(event).model_copy(update={"attendance_count": count})
+
+
+@router.get("", response_model=list[EventRead])
+def list_events(
+    user: CurrentUser,
+    session: SessionDep,
+    search: Annotated[str, Query(max_length=200)] = "",
+    skip: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+):
     query = select(Event)
-    if search:
-        # Filtra si escriben algo en la barra de búsqueda de Angular
-        query = query.where(Event.title.contains(search) | Event.location_name.contains(search))
-    
-    eventos = db.exec(query.offset(skip).limit(limit)).all()
-    return eventos
+    if search.strip():
+        term = search.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        query = query.where(Event.title.ilike(f"%{term}%", escape="\\") | Event.location_name.ilike(f"%{term}%", escape="\\"))
+    events = session.exec(query.order_by(Event.starts_at, Event.id).offset(skip).limit(limit)).all()
+    if not events:
+        return []
+    counts = dict(session.exec(select(Attendance.event_id, func.count()).where(Attendance.event_id.in_([event.id for event in events])).group_by(Attendance.event_id)).all())
+    return [EventRead.model_validate(event).model_copy(update={"attendance_count": counts.get(event.id, 0)}) for event in events]
 
-@router.post("")
-def crear_evento(evento: Event, db: Session = Depends(get_session), usuario_actual = Depends(get_current_user)):
-    # Le asignamos el ID del usuario que inició sesión como dueño del evento
-    evento.owner_id = usuario_actual.id
 
-    # Generamos un código QR único si no viene uno
-    if not evento.qr_code:
-        evento.qr_code = str(uuid.uuid4())
+@router.post("", response_model=EventRead, status_code=status.HTTP_201_CREATED)
+def create_event(data: EventCreate, user: CurrentUser, session: SessionDep):
+    event = Event(**data.model_dump(), owner_id=user.id, qr_code=secrets.token_urlsafe(16))
+    session.add(event)
+    session.commit()
+    session.refresh(event)
+    return read_event(event, session)
 
-    db.add(evento)
-    db.commit()
-    db.refresh(evento)
-    return evento
 
-@router.get("/{event_id}")
-def obtener_evento(event_id: int, db: Session = Depends(get_session)):
-    evento = db.get(Event, event_id)
-    if not evento:
-        raise HTTPException(status_code=404, detail="Evento no encontrado")
-    return evento
+@router.get("/{event_id}", response_model=EventRead)
+def get_event(event_id: int, user: CurrentUser, session: SessionDep):
+    return read_event(find_event(event_id, session), session)
+
+
+@router.put("/{event_id}", response_model=EventRead)
+def update_event(event_id: int, data: EventUpdate, user: CurrentUser, session: SessionDep):
+    event = find_event(event_id, session)
+    require_owner(event, user)
+    event.sqlmodel_update(data.model_dump())
+    session.add(event)
+    session.commit()
+    session.refresh(event)
+    return read_event(event, session)
+
+
+@router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_event(event_id: int, user: CurrentUser, session: SessionDep):
+    event = find_event(event_id, session)
+    require_owner(event, user)
+    session.delete(event)
+    session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

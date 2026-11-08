@@ -1,51 +1,105 @@
-<div class="detail-container">
-  <div *ngIf="cargando()" class="loading-state">
-    <mat-spinner diameter="40"></mat-spinner>
-    <p>Cargando detalles...</p>
-  </div>
-
-  <mat-card *ngIf="!cargando() && evento()" class="event-card">
-    <mat-card-header>
-      <mat-card-title>{{ evento().title }}</mat-card-title>
-      <mat-card-subtitle>{{ evento().location_name }}</mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <p class="description">{{ evento().description || 'Sin descripción' }}</p>
-      
-      <div class="info-grid">
-        <div class="info-item">
-          <mat-icon color="primary">event</mat-icon>
-          <span><strong>Inicio:</strong> {{ evento().starts_at | date:'short' }}</span>
-        </div>
-        <div class="info-item">
-          <mat-icon color="primary">event_busy</mat-icon>
-          <span><strong>Fin:</strong> {{ evento().ends_at | date:'short' }}</span>
-        </div>
-        <div class="info-item">
-          <mat-icon color="primary">group</mat-icon>
-          <span><strong>Asistentes:</strong> {{ evento().attendance_count }}</span>
-        </div>
-      </div>
-    </mat-card-content>
-
-    <mat-card-actions class="actions-row">
-      <button mat-stroked-button routerLink="/eventos">Volver</button>
-      
-      <button mat-flat-button color="accent" (click)="registrarAsistencia()">
-        <mat-icon>check_circle</mat-icon> Registrar Asistencia
-      </button>
-      
-      <!-- Controles visibles solo si el usuario activo es el creador del evento -->
-      <ng-container *ngIf="evento().owner_id === authService.usuario()?.id">
-        <span class="spacer"></span>
-        <button mat-icon-button color="primary" title="Editar">
-          <mat-icon>edit</mat-icon>
+<section class="detail-container">
+  <a mat-button routerLink="/eventos"><mat-icon>arrow_back</mat-icon>Volver a eventos</a>
+  @if (resource.isLoading()) {
+    <div class="loading-state" role="status">
+      <mat-spinner diameter="40" />
+      <p>Cargando evento…</p>
+    </div>
+  } @else if (resource.error() || !id()) {
+    <app-empty-state
+      title="No pudimos abrir el evento"
+      [message]="errorMessage()"
+      icon="error_outline"
+      ><button mat-stroked-button (click)="resource.reload()">Reintentar</button></app-empty-state
+    >
+  } @else if (evento(); as event) {
+    <mat-card appearance="outlined" class="event-card">
+      <mat-card-header
+        ><mat-card-title
+          ><h1>{{ event.title }}</h1></mat-card-title
+        ><mat-card-subtitle>{{
+          event.location_name || 'Lugar por confirmar'
+        }}</mat-card-subtitle></mat-card-header
+      >
+      <mat-card-content>
+        <p class="description">{{ event.description || 'Sin descripción' }}</p>
+        <dl class="info-grid">
+          <div>
+            <dt>Inicio</dt>
+            <dd>{{ event.starts_at | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt>Término</dt>
+            <dd>{{ event.ends_at | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt>Asistencias registradas</dt>
+            <dd>{{ event.attendance_count }}</dd>
+          </div>
+          @if (event.latitude !== null) {
+            <div>
+              <dt>Coordenadas</dt>
+              <dd>{{ event.latitude }}, {{ event.longitude }}</dd>
+            </div>
+            <div>
+              <dt>Radio del lugar</dt>
+              <dd>{{ event.radius_m }} metros</dd>
+            </div>
+          }
+        </dl>
+      </mat-card-content>
+      <mat-card-actions class="actions-row">
+        <button
+          mat-flat-button
+          [disabled]="busy() || registered() || myAttendance.isLoading()"
+          (click)="registrarAsistencia()"
+        >
+          <mat-icon>check_circle</mat-icon
+          >{{
+            registered() ? 'Asistencia registrada' : busy() ? 'Procesando…' : 'Registrar asistencia'
+          }}
         </button>
-        <button mat-icon-button color="warn" title="Eliminar">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </ng-container>
-    </mat-card-actions>
-  </mat-card>
-</div>
+        @if (isOwner()) {
+          <button mat-stroked-button [disabled]="busy()" (click)="editar()">
+            <mat-icon>edit</mat-icon>Editar
+          </button>
+          <button mat-stroked-button [disabled]="busy()" (click)="eliminar()">
+            <mat-icon>delete</mat-icon>Eliminar
+          </button>
+        }
+      </mat-card-actions>
+    </mat-card>
+    @if (isOwner()) {
+      <section class="attendees">
+        <h2>Asistentes de tu evento</h2>
+        @if (attendees.isLoading()) {
+          <div class="loading-state" role="status">
+            <mat-spinner diameter="32" />
+            <p>Cargando asistentes…</p>
+          </div>
+        } @else if (attendees.error()) {
+          <app-empty-state title="No pudimos cargar los asistentes" [message]="attendeesError()"
+            ><button mat-stroked-button (click)="attendees.reload()">
+              Reintentar
+            </button></app-empty-state
+          >
+        } @else if (attendees.hasValue() && attendees.value().length) {
+          <ul>
+            @for (attendance of attendees.value(); track attendance.id) {
+              <li>
+                <span>Usuario #{{ attendance.user_id }}</span
+                ><time>{{ attendance.checked_in_at | date: 'medium' }}</time>
+              </li>
+            }
+          </ul>
+        } @else {
+          <app-empty-state
+            title="Aún no hay asistentes"
+            message="Las asistencias registradas aparecerán aquí."
+            icon="group"
+          />
+        }
+      </section>
+    }
+  }
+</section>
