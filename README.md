@@ -38,7 +38,8 @@ checkin-eventos/
 
 - Docker Desktop (o Docker Engine) con Docker Compose
 - Python 3.11 o superior
-- Node.js y npm
+- Node.js **24.15 o superior** (o 22.22.3 o superior en la rama 22) y npm. Angular CLI 22 no
+  arranca con versiones anteriores; revisa la tuya con `node --version`.
 
 ### 1. Configurar variables de entorno
 
