@@ -26,6 +26,7 @@ Entidad principal del CRUD. Un usuario solo puede modificar o eliminar los event
 | GET | `/api/events` | Sí | Lista. Parámetros opcionales: `search` (texto en título/lugar), `skip`, `limit` |
 | POST | `/api/events` | Sí | Crea un evento (el dueño es el usuario del token) |
 | GET | `/api/events/{id}` | Sí | Detalle |
+| GET | `/api/events/{id}/qr` | Sí | Obtiene el código QR (solo el dueño, 403 si no) |
 | PUT | `/api/events/{id}` | Sí | Modifica (solo el dueño) |
 | DELETE | `/api/events/{id}` | Sí | Elimina (solo el dueño) y sus asistencias. 204 |
 
@@ -50,9 +51,11 @@ Entidad principal del CRUD. Un usuario solo puede modificar o eliminar los event
   "id": 1, "title": "Charla de ciberseguridad", "description": "…",
   "location_name": "Auditorio G6", "latitude": -29.9, "longitude": -71.25, "radius_m": 100,
   "starts_at": "2026-11-20T15:00:00Z", "ends_at": "2026-11-20T17:00:00Z",
-  "qr_code": "token-unico", "owner_id": 1, "attendance_count": 0
+  "owner_id": 1, "attendance_count": 0
 }
 ```
+
+El código QR no se incluye en las respuestas normales del evento. Solo el dueño puede obtenerlo mediante `GET /api/events/{id}/qr`, que responde `{ "qr_code": "token-unico" }`. Angular lo convierte localmente en una imagen para mostrarlo en el detalle. Por ahora, el QR se muestra, pero no se utiliza para validar el registro de asistencia.
 
 `Attendance`
 ```json

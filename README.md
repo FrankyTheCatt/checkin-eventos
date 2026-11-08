@@ -15,7 +15,7 @@ y el contrato de la API en [`docs/API.md`](docs/API.md).
 
 ```
 checkin-eventos/
-├── backend/            API FastAPI
+├── backend/            API FastAPI y pruebas
 │   ├── app/
 │   │   ├── main.py
 │   │   ├── config.py
@@ -26,60 +26,96 @@ checkin-eventos/
 │   │   ├── routers/
 │   │   └── schemas/
 │   └── tests/
-├── frontend/           Angular (lo crea el paquete 3)
+├── frontend/           Aplicación Angular
 ├── docs/
-├── docker-compose.yml  PostgreSQL para desarrollo
+├── docker-compose.yml  PostgreSQL para desarrollo local
 └── .env.example
 ```
 
 ## Cómo ejecutar
 
-### 1. Variables de entorno
+### Requisitos
 
-```bash
-cp .env.example .env
+- Docker Desktop (o Docker Engine) con Docker Compose
+- Python 3.11 o superior
+- Node.js y npm
+
+### 1. Configurar variables de entorno
+
+Desde la raíz del repositorio, crea el archivo `.env` a partir de la plantilla:
+
+```powershell
+Copy-Item .env.example .env
 ```
 
-Edita `.env` y cambia la clave de PostgreSQL y el `JWT_SECRET`
-(`python -c "import secrets; print(secrets.token_urlsafe(48))"`). El `.env` no se sube al repositorio.
+En Linux o macOS, usa `cp .env.example .env`.
 
-### 2. Base de datos
+Abre `.env` y cambia `POSTGRES_PASSWORD` y `JWT_SECRET`. Puedes generar un secreto JWT con:
+
+```powershell
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Usa el mismo valor de contraseña en `POSTGRES_PASSWORD` y en la contraseña de `DATABASE_URL`.
+No compartas ni subas `.env`; el archivo está excluido de Git.
+
+### 2. Iniciar la base de datos
 
 ```bash
 docker compose up -d db
+docker compose ps
 ```
 
-Levanta PostgreSQL 16 en el puerto 5432 con los datos del `.env`. Las tablas se crean
-automáticamente cuando arranca el backend.
+Esto inicia PostgreSQL 16, disponible en `127.0.0.1:5433` según `POSTGRES_PORT` en `.env`.
+Las tablas se crean automáticamente al iniciar el backend. Para detener la base sin borrar
+sus datos, ejecuta `docker compose down` desde la raíz; evita `docker compose down -v` si
+quieres conservarlos.
 
-### 3. Backend
+### 3. Iniciar el backend
 
-```bash
+En una terminal nueva:
+
+```powershell
 cd backend
 python -m venv .venv
-# Windows: .venv\Scripts\activate    |    Linux/macOS: source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --reload
 ```
 
-- API: http://localhost:8000
-- Documentación interactiva (Swagger): http://localhost:8000/docs
+En Linux o macOS, activa el entorno con `source .venv/bin/activate` en lugar de
+`.\.venv\Scripts\Activate.ps1`.
 
-El backend lee el `.env` de la raíz del repositorio.
+El backend lee las variables del `.env` de la raíz. La API queda en
+<http://127.0.0.1:8000> y su documentación interactiva (Swagger) en
+<http://127.0.0.1:8000/docs>.
 
-### 4. Frontend
+### 4. Iniciar el frontend
 
-Se completa cuando esté listo el paquete 3 (ver `docs/DIVISION.md`).
+En otra terminal:
 
-## Pruebas del backend
-
-```bash
-cd backend
-pytest
+```powershell
+cd frontend
+npm ci
+npm start -- --host 127.0.0.1 --port 4200
 ```
 
-Por defecto las pruebas usan una base SQLite en memoria. Para correrlas contra PostgreSQL:
+Abre <http://127.0.0.1:4200>. El backend debe estar ejecutándose para que funcionen
+el registro, el inicio de sesión y las funciones de eventos.
 
-```bash
-TEST_DATABASE_URL=postgresql+psycopg://usuario:clave@localhost:5432/checkin_test pytest
+### Pruebas
+
+Backend, desde la carpeta `backend` y con el entorno virtual activado:
+
+```powershell
+python -m pytest
 ```
+
+Frontend, desde la carpeta `frontend`:
+
+```powershell
+npm test -- --watch=false
+npm run build
+```
+
+Las pruebas del backend usan SQLite en memoria por defecto y no modifican la base de desarrollo.

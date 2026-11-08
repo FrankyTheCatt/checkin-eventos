@@ -54,9 +54,12 @@ class EventRead(BaseModel):
     radius_m: int
     starts_at: datetime
     ends_at: datetime
-    qr_code: str
     owner_id: int
     attendance_count: int = 0
+
+
+class EventQrRead(BaseModel):
+    qr_code: str
 
 
 class AttendanceCreate(Coordinates):
