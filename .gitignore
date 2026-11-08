@@ -19,3 +19,7 @@ frontend/.angular/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Entornos virtuales
+venv/
+backend/venv/
