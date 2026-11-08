@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { Attendance, EventPayload, EventRecord } from './event.models';
+import { Attendance, EventPayload, EventQr, EventRecord } from './event.models';
 
 @Injectable({ providedIn: 'root' })
 export class EventsService {
@@ -14,6 +14,10 @@ export class EventsService {
 
   detailResource(id: () => number | undefined) {
     return httpResource<EventRecord>(() => (id() ? this.url + '/' + id() : undefined));
+  }
+
+  qrResource(id: () => number | undefined) {
+    return httpResource<EventQr>(() => (id() ? this.url + '/' + id() + '/qr' : undefined));
   }
 
   attendeesResource(id: () => number | undefined) {

@@ -12,8 +12,11 @@ export interface EventPayload {
 export interface EventRecord extends EventPayload {
   id: number;
   owner_id: number;
-  qr_code: string;
   attendance_count: number;
+}
+
+export interface EventQr {
+  qr_code: string;
 }
 
 export interface Attendance {

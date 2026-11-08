@@ -1,5 +1,14 @@
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  PLATFORM_ID,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -51,6 +60,7 @@ export class EventDetail {
   readonly isOwner = computed(
     () => !!this.evento() && this.evento()?.owner_id === this.auth.usuario()?.id,
   );
+  readonly qrResource = this.service.qrResource(() => (this.isOwner() ? this.id() : undefined));
   readonly attendees = this.service.attendeesResource(() =>
     this.isOwner() ? this.id() : undefined,
   );
@@ -61,12 +71,49 @@ export class EventDetail {
       this.myAttendance.value().some((item) => item.event_id === this.id()),
   );
   readonly busy = signal(false);
+  readonly qrImage = signal<string | null>(null);
+  readonly qrImageError = signal(false);
+  private readonly platformId = inject(PLATFORM_ID);
   readonly errorMessage = computed(() =>
     apiError(this.resource.error(), 'El evento no está disponible.'),
+  );
+  readonly qrErrorMessage = computed(() =>
+    apiError(this.qrResource.error(), 'No se pudo cargar el código QR.'),
   );
   readonly attendeesError = computed(() =>
     apiError(this.attendees.error(), 'No se pudieron cargar los asistentes.'),
   );
+
+  constructor() {
+    effect((onCleanup) => {
+      const code = this.qrResource.hasValue() ? this.qrResource.value().qr_code : undefined;
+      if (!code || !isPlatformBrowser(this.platformId)) {
+        this.qrImage.set(null);
+        this.qrImageError.set(false);
+        return;
+      }
+
+      let active = true;
+      this.qrImageError.set(false);
+      void import('qrcode')
+        .then(({ default: QRCode }) =>
+          QRCode.toDataURL(code, { errorCorrectionLevel: 'M', margin: 2, width: 256 }),
+        )
+        .then((image) => {
+          if (active) this.qrImage.set(image);
+        })
+        .catch(() => {
+          if (active) {
+            this.qrImage.set(null);
+            this.qrImageError.set(true);
+          }
+        });
+
+      onCleanup(() => {
+        active = false;
+      });
+    });
+  }
 
   editar() {
     const event = this.evento();

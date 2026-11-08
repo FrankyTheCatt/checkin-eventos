@@ -70,6 +70,34 @@
       </mat-card-actions>
     </mat-card>
     @if (isOwner()) {
+      <section class="event-qr" aria-labelledby="event-qr-title">
+        <h2 id="event-qr-title">Código QR del evento</h2>
+        <p>
+          Este QR muestra el código único del evento. El registro de asistencia todavía se realiza
+          con el botón.
+        </p>
+        @if (qrResource.isLoading()) {
+          <div class="loading-state" role="status">
+            <mat-spinner diameter="32" />
+            <p>Cargando código QR…</p>
+          </div>
+        } @else if (qrResource.error()) {
+          <app-empty-state title="No pudimos cargar el código QR" [message]="qrErrorMessage()">
+            <button mat-stroked-button (click)="qrResource.reload()">Reintentar</button>
+          </app-empty-state>
+        } @else if (qrResource.hasValue()) {
+          @if (qrImage()) {
+            <img class="qr-image" [src]="qrImage()" alt="Código QR del evento" />
+          } @else if (qrImageError()) {
+            <p class="qr-error" role="alert">No se pudo generar la imagen del código QR.</p>
+          } @else {
+            <div class="loading-state" role="status">
+              <mat-spinner diameter="32" />
+              <p>Generando código QR…</p>
+            </div>
+          }
+        }
+      </section>
       <section class="attendees">
         <h2>Asistentes de tu evento</h2>
         @if (attendees.isLoading()) {

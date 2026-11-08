@@ -6,7 +6,7 @@ from sqlmodel import func, select
 
 from app.deps import CurrentUser, SessionDep
 from app.models import Attendance, Event
-from app.schemas.event import EventCreate, EventRead, EventUpdate
+from app.schemas.event import EventCreate, EventQrRead, EventRead, EventUpdate
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -59,6 +59,13 @@ def create_event(data: EventCreate, user: CurrentUser, session: SessionDep):
 @router.get("/{event_id}", response_model=EventRead)
 def get_event(event_id: int, user: CurrentUser, session: SessionDep):
     return read_event(find_event(event_id, session), session)
+
+
+@router.get("/{event_id}/qr", response_model=EventQrRead)
+def get_event_qr(event_id: int, user: CurrentUser, session: SessionDep):
+    event = find_event(event_id, session)
+    require_owner(event, user)
+    return EventQrRead(qr_code=event.qr_code)
 
 
 @router.put("/{event_id}", response_model=EventRead)

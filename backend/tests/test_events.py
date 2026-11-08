@@ -36,13 +36,17 @@ def test_crud(client, owner, event):
     event_id = event["id"]
     assert event["attendance_count"] == 0
     assert event["owner_id"] > 0
-    assert len(event["qr_code"]) >= 20
+    assert "qr_code" not in event
+    qr_response = client.get(f"/api/events/{event_id}/qr", headers=owner)
+    assert qr_response.status_code == 200
+    qr_code = qr_response.json()["qr_code"]
+    assert len(qr_code) >= 20
     assert client.get(f"/api/events/{event_id}", headers=owner).json() == event
     changed = {**EVENT, "title": "Título actualizado"}
     response = client.put(f"/api/events/{event_id}", headers=owner, json=changed)
     assert response.status_code == 200
     assert response.json()["title"] == changed["title"]
-    assert response.json()["qr_code"] == event["qr_code"]
+    assert client.get(f"/api/events/{event_id}/qr", headers=owner).json()["qr_code"] == qr_code
     assert client.delete(f"/api/events/{event_id}", headers=owner).status_code == 204
     assert client.get(f"/api/events/{event_id}", headers=owner).status_code == 404
 
@@ -62,6 +66,8 @@ def test_invalid_event_returns_422(client, owner, changes):
 def test_only_owner_can_modify_delete_and_list_attendees(client, event, visitor):
     path = f"/api/events/{event['id']}"
     assert client.get(path, headers=visitor).status_code == 200
+    assert "qr_code" not in client.get(path, headers=visitor).json()
+    assert client.get(path + "/qr", headers=visitor).status_code == 403
     assert client.put(path, headers=visitor, json=EVENT).status_code == 403
     assert client.delete(path, headers=visitor).status_code == 403
     assert client.get(path + "/attendances", headers=visitor).status_code == 403
@@ -73,6 +79,7 @@ def test_only_owner_can_modify_delete_and_list_attendees(client, event, visitor)
     ("get", "/api/events/1", None),
     ("put", "/api/events/1", EVENT),
     ("delete", "/api/events/1", None),
+    ("get", "/api/events/1/qr", None),
     ("post", "/api/events/1/attendances", {}),
     ("get", "/api/events/1/attendances", None),
     ("get", "/api/attendances/me", None),
@@ -114,7 +121,14 @@ def test_attendance_duplicate_count_and_privacy(client, owner, visitor, event, s
 
 
 def test_missing_events_and_invalid_attendance(client, owner, event):
-    for method, suffix in [("get", ""), ("put", ""), ("delete", ""), ("post", "/attendances"), ("get", "/attendances")]:
+    for method, suffix in [
+        ("get", ""),
+        ("get", "/qr"),
+        ("put", ""),
+        ("delete", ""),
+        ("post", "/attendances"),
+        ("get", "/attendances"),
+    ]:
         kwargs = {"json": EVENT} if method == "put" else {}
         assert client.request(method, "/api/events/9999" + suffix, headers=owner, **kwargs).status_code == 404
     path = f"/api/events/{event['id']}/attendances"
