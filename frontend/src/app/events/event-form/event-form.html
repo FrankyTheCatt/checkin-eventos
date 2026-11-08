@@ -1,0 +1,79 @@
+<h2 mat-dialog-title>{{ data ? 'Editar evento' : 'Crear evento' }}</h2>
+<form [formGroup]="form" (ngSubmit)="guardar()">
+  <mat-dialog-content>
+    <div class="form-container">
+      <mat-form-field subscriptSizing="dynamic" appearance="outline">
+        <mat-label>Título</mat-label
+        ><input matInput formControlName="title" maxlength="150" required />
+        <mat-error>Escribe un título de 1 a 150 caracteres, que no sean solo espacios.</mat-error>
+      </mat-form-field>
+      <mat-form-field subscriptSizing="dynamic" appearance="outline">
+        <mat-label>Descripción</mat-label
+        ><textarea matInput formControlName="description" rows="3" maxlength="2000"></textarea>
+        <mat-error>La descripción admite hasta 2000 caracteres.</mat-error>
+      </mat-form-field>
+      <mat-form-field subscriptSizing="dynamic" appearance="outline">
+        <mat-label>Lugar</mat-label
+        ><input matInput formControlName="location_name" maxlength="200" />
+        <mat-error>El lugar admite hasta 200 caracteres.</mat-error>
+      </mat-form-field>
+      <div class="form-row">
+        <mat-form-field subscriptSizing="dynamic" appearance="outline"
+          ><mat-label>Inicio</mat-label
+          ><input matInput type="datetime-local" formControlName="starts_at" required /><mat-error
+            >Indica la fecha y hora de inicio.</mat-error
+          ></mat-form-field
+        >
+        <mat-form-field subscriptSizing="dynamic" appearance="outline"
+          ><mat-label>Término</mat-label
+          ><input matInput type="datetime-local" formControlName="ends_at" required /><mat-error
+            >Indica la fecha y hora de término.</mat-error
+          ></mat-form-field
+        >
+      </div>
+      <p class="hint">Las horas se muestran en la zona horaria de tu dispositivo.</p>
+      @if (
+        form.hasError('dateOrder') &&
+        (form.controls.ends_at.touched || form.controls.starts_at.touched)
+      ) {
+        <p class="error" role="alert">El término debe ser posterior al inicio.</p>
+      }
+      <div class="form-row">
+        <mat-form-field subscriptSizing="dynamic" appearance="outline"
+          ><mat-label>Latitud (opcional)</mat-label
+          ><input matInput type="number" step="any" formControlName="latitude" /><mat-error
+            >Usa un valor entre -90 y 90.</mat-error
+          ></mat-form-field
+        >
+        <mat-form-field subscriptSizing="dynamic" appearance="outline"
+          ><mat-label>Longitud (opcional)</mat-label
+          ><input matInput type="number" step="any" formControlName="longitude" /><mat-error
+            >Usa un valor entre -180 y 180.</mat-error
+          ></mat-form-field
+        >
+      </div>
+      @if (
+        form.hasError('coordinates') &&
+        (form.controls.latitude.touched || form.controls.longitude.touched)
+      ) {
+        <p class="error" role="alert">Indica ambas coordenadas o deja ambas vacías.</p>
+      }
+      <mat-form-field subscriptSizing="dynamic" appearance="outline"
+        ><mat-label>Radio del lugar en metros</mat-label
+        ><input matInput type="number" formControlName="radius_m" required /><mat-error
+          >Usa un número entero entre 1 y 100000.</mat-error
+        ></mat-form-field
+      >
+      @if (error()) {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
+    </div>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end"
+    ><button mat-button type="button" [disabled]="saving()" (click)="dialogRef.close()">
+      Cancelar</button
+    ><button mat-flat-button type="submit" [disabled]="saving()">
+      {{ saving() ? 'Guardando…' : 'Guardar' }}
+    </button></mat-dialog-actions
+  >
+</form>

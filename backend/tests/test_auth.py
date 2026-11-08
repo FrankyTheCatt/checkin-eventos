@@ -127,3 +127,9 @@ def test_usuario_desactivado_no_puede_entrar(client, session, crear_usuario):
 
 def test_health(client):
     assert client.get("/api/health").json() == {"status": "ok"}
+
+
+def test_login_con_clave_multibyte_demasiado_larga_no_falla(client, crear_usuario):
+    crear_usuario()
+    response = client.post("/api/auth/login", json={"email": "ana@correo.cl", "password": "ñ" * 40})
+    assert response.status_code == 401

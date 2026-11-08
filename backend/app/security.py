@@ -17,6 +17,8 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, hashed: str | None) -> bool:
+    if len(password.encode("utf-8")) > 72:
+        return False
     objetivo = hashed.encode("utf-8") if hashed else _HASH_FALSO
     coincide = bcrypt.checkpw(password.encode("utf-8"), objetivo)
     return coincide and hashed is not None

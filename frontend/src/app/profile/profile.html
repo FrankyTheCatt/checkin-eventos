@@ -1,0 +1,39 @@
+<section class="profile">
+  <h1>Mi perfil</h1>
+  @if (auth.usuario(); as user) {
+    <mat-card appearance="outlined"
+      ><mat-card-header
+        ><mat-card-title>{{ user.full_name }}</mat-card-title
+        ><mat-card-subtitle>{{ user.email }}</mat-card-subtitle></mat-card-header
+      ><mat-card-content
+        ><p>Cuenta creada el {{ user.created_at | date: 'longDate' }}</p></mat-card-content
+      ></mat-card
+    >
+  }
+  <h2>Mis asistencias</h2>
+  @if (attendances.isLoading()) {
+    <mat-spinner diameter="40" aria-label="Cargando asistencias" />
+  } @else if (attendances.error()) {
+    <app-empty-state title="No pudimos cargar tus asistencias" [message]="error()"
+      ><button mat-stroked-button (click)="attendances.reload()">
+        Reintentar
+      </button></app-empty-state
+    >
+  } @else if (attendances.hasValue() && attendances.value().length) {
+    <ul>
+      @for (item of attendances.value(); track item.id) {
+        <li>
+          <a mat-button [routerLink]="['/eventos', item.event_id]"
+            >Ver evento #{{ item.event_id }}</a
+          ><span>{{ item.checked_in_at | date: 'medium' }}</span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <app-empty-state
+      title="Todavía no tienes asistencias"
+      message="Explora los eventos y registra tu primera asistencia."
+      ><a mat-stroked-button routerLink="/eventos">Explorar eventos</a></app-empty-state
+    >
+  }
+</section>

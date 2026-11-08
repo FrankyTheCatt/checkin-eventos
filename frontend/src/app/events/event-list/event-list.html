@@ -1,0 +1,69 @@
+<section class="list-container">
+  <div class="header">
+    <div>
+      <p class="eyebrow">ENCUENTRA TU PRÓXIMO EVENTO</p>
+      <h1>Explorar eventos</h1>
+      <p>Descubre actividades y registra tu asistencia en un solo lugar.</p>
+    </div>
+    <button mat-flat-button (click)="abrirModalCrear()">
+      <mat-icon>add</mat-icon>Crear evento
+    </button>
+  </div>
+  <div class="filters">
+    <mat-form-field subscriptSizing="dynamic" appearance="outline">
+      <mat-label>Buscar por título o lugar</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        maxlength="200"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="actualizarBusqueda($event)"
+      />
+    </mat-form-field>
+    <mat-form-field subscriptSizing="dynamic" appearance="outline">
+      <mat-label>Eventos por página</mat-label>
+      <mat-select [value]="pageSize()" (selectionChange)="changePageSize($event.value)">
+        <mat-option [value]="6">6</mat-option><mat-option [value]="12">12</mat-option
+        ><mat-option [value]="24">24</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  @if (resource.isLoading()) {
+    <div class="loading-state" role="status">
+      <mat-spinner diameter="40" />
+      <p>Cargando eventos…</p>
+    </div>
+  } @else if (resource.error()) {
+    <app-empty-state title="No pudimos cargar los eventos" [message]="error()" icon="error_outline"
+      ><button mat-stroked-button (click)="resource.reload()">Reintentar</button></app-empty-state
+    >
+  } @else if (events().length === 0) {
+    <app-empty-state
+      title="No hay eventos para mostrar"
+      message="Prueba otra búsqueda o crea el primer evento."
+    />
+  } @else {
+    <div class="event-grid">
+      @for (event of events(); track event.id) {
+        <app-event-card [event]="event" />
+      }
+    </div>
+  }
+  <div class="pagination" aria-label="Paginación de eventos">
+    <button
+      mat-stroked-button
+      [disabled]="page() === 0 || resource.isLoading()"
+      (click)="previousPage()"
+    >
+      Anterior
+    </button>
+    <span aria-live="polite">Página {{ page() + 1 }}</span>
+    <button
+      mat-stroked-button
+      [disabled]="!hasNext() || resource.isLoading() || !!resource.error()"
+      (click)="nextPage()"
+    >
+      Siguiente
+    </button>
+  </div>
+</section>

@@ -1,0 +1,15 @@
+<mat-toolbar>
+  <a class="brand" routerLink="/eventos" aria-label="CheckIn Eventos, inicio"
+    >CheckIn <span>Eventos</span></a
+  >
+  <nav aria-label="Navegación principal">
+    @if (auth.autenticado()) {
+      <a mat-button routerLink="/eventos" routerLinkActive="active">Eventos</a>
+      <a mat-button routerLink="/perfil" routerLinkActive="active">Mi perfil</a>
+      <button mat-button (click)="logout()">Cerrar sesión</button>
+    } @else {
+      <a mat-button routerLink="/login">Ingresar</a>
+      <a mat-flat-button routerLink="/registro">Crear cuenta</a>
+    }
+  </nav>
+</mat-toolbar>
