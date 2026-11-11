@@ -27,6 +27,8 @@ checkin-eventos/
 │   │   └── schemas/
 │   └── tests/
 ├── frontend/           Aplicación Angular
+│   └── android/        Proyecto Android nativo (Capacitor)
+├── .github/workflows/  Workflow que genera el APK
 ├── docs/
 ├── docker-compose.yml  PostgreSQL para desarrollo local
 └── .env.example
@@ -120,3 +122,46 @@ npm run build
 ```
 
 Las pruebas del backend usan SQLite en memoria por defecto y no modifican la base de desarrollo.
+
+## App Android
+
+La app Angular se empaqueta como aplicación Android con Capacitor. Primero se genera un build
+estático de la web, sin SSR (`npm run build:mobile`); luego `cap sync` copia esa web al proyecto
+nativo `frontend/android/` y Gradle arma el APK. La app instalada en el teléfono usa la API de
+producción (Railway), por lo que no necesita el backend local.
+
+### Requisitos
+
+- Android Studio con el Android SDK
+- JDK 21
+- Node.js y npm según los requisitos de la sección [Cómo ejecutar](#requisitos)
+
+### Generar el APK localmente
+
+```powershell
+cd frontend
+npm ci
+npm run android:sync
+cd android
+.\gradlew.bat assembleDebug
+```
+
+En Linux o macOS, usa `./gradlew assembleDebug`. El APK queda en
+`frontend/android/app/build/outputs/apk/debug/app-debug.apk`.
+
+### Probar en un teléfono real
+
+Activa la depuración USB en el teléfono, conéctalo al computador y, desde `frontend`, ejecuta
+`npx cap run android` para instalar y abrir la app. Con `npx cap open android` se abre el
+proyecto en Android Studio para ejecutarlo desde ahí.
+
+### Descargar el APK desde GitHub Actions
+
+1. Abre la pestaña **Actions** del repositorio.
+2. Entra al workflow **APK Android** y elige la última ejecución.
+3. Descarga el artefacto `checkin-eventos-debug-apk`.
+
+### CORS
+
+El backend debe permitir los orígenes `https://localhost` y `capacitor://localhost` en
+`CORS_ORIGINS` para que la app Android pueda llamar a la API. Ya vienen incluidos por defecto.
