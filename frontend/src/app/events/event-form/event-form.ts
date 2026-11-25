@@ -10,10 +10,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
 import { EventsService } from '../events';
 import { EventPayload, EventRecord } from '../event.models';
+import { GeolocationService } from '../../shared/services/geolocation.service';
 import { apiError } from '../../shared/api-error';
 
 export function localDate(value?: string): string {
@@ -44,19 +46,22 @@ export const eventDates: ValidatorFn = (control: AbstractControl) => {
 
 @Component({
   selector: 'app-event-form',
-  imports: [ReactiveFormsModule, MatDialogModule, MatInputModule, MatButtonModule],
+  imports: [ReactiveFormsModule, MatDialogModule, MatInputModule, MatButtonModule, MatIconModule],
   templateUrl: './event-form.html',
   styleUrl: './event-form.scss',
 })
 export class EventForm {
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(EventsService);
+  private readonly geoService = inject(GeolocationService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroyRef = inject(DestroyRef);
   readonly dialogRef = inject(MatDialogRef<EventForm>);
   readonly data = inject<EventRecord | null>(MAT_DIALOG_DATA, { optional: true });
   readonly saving = signal(false);
   readonly error = signal('');
+  readonly obteniendoGPS = signal(false);
+  readonly gpsMensaje = signal('');
   readonly form = this.fb.group(
     {
       title: this.fb.nonNullable.control(this.data?.title ?? '', [
@@ -99,6 +104,28 @@ export class EventForm {
       ],
     },
   );
+
+  async usarUbicacionGPS() {
+    this.obteniendoGPS.set(true);
+    this.gpsMensaje.set('');
+    try {
+      const coords = await this.geoService.getCurrentPosition();
+      this.form.patchValue({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      });
+      this.form.controls.latitude.markAsDirty();
+      this.form.controls.longitude.markAsDirty();
+      this.gpsMensaje.set(`GPS: ${coords.latitude}, ${coords.longitude}`);
+      this.snackBar.open('Coordenadas GPS obtenidas correctamente', 'Cerrar', { duration: 3000 });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'No se pudo obtener la ubicación GPS';
+      this.gpsMensaje.set(msg);
+      this.snackBar.open(msg, 'Cerrar', { duration: 4500 });
+    } finally {
+      this.obteniendoGPS.set(false);
+    }
+  }
 
   guardar() {
     this.form.markAllAsTouched();

@@ -4,6 +4,10 @@
   >
   <nav aria-label="Navegación principal">
     @if (auth.autenticado()) {
+      <button mat-button (click)="abrirEscaner()" class="scan-nav-btn">
+        <mat-icon>qr_code_scanner</mat-icon>
+        <span>Escanear QR</span>
+      </button>
       <a mat-button routerLink="/eventos" routerLinkActive="active">Eventos</a>
       <a mat-button routerLink="/perfil" routerLinkActive="active">Mi perfil</a>
       <button mat-button (click)="logout()">Cerrar sesión</button>

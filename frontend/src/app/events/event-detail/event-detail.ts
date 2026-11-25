@@ -23,6 +23,9 @@ import { AuthService } from '../../auth/auth';
 import { EventForm } from '../event-form/event-form';
 import { EmptyState } from '../../shared/empty-state/empty-state';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { GeolocationService } from '../../shared/services/geolocation.service';
+import { MotionService } from '../../shared/services/motion.service';
+import { QrScannerDialog, ScanResult } from '../../shared/qr-scanner-dialog/qr-scanner-dialog';
 import { apiError } from '../../shared/api-error';
 
 @Component({
@@ -74,6 +77,24 @@ export class EventDetail {
   readonly qrImage = signal<string | null>(null);
   readonly qrImageError = signal(false);
   private readonly platformId = inject(PLATFORM_ID);
+  readonly geoService = inject(GeolocationService);
+  readonly motionService = inject(MotionService);
+
+  readonly distanceInfo = computed(() => {
+    const event = this.evento();
+    const userCoords = this.geoService.currentCoordinates();
+    if (!event || !userCoords || event.latitude === null || event.longitude === null) {
+      return null;
+    }
+    return this.geoService.validateDistanceToEvent(
+      userCoords.latitude,
+      userCoords.longitude,
+      event.latitude,
+      event.longitude,
+      event.radius_m,
+    );
+  });
+
   readonly errorMessage = computed(() =>
     apiError(this.resource.error(), 'El evento no está disponible.'),
   );
@@ -85,6 +106,16 @@ export class EventDetail {
   );
 
   constructor() {
+    // Sensor: Al agitar el dispositivo, recarga el evento y asistentes
+    this.motionService.shake$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.snackBar.open('📱 ¡Dispositivo agitado! Recargando datos del evento...', 'Cerrar', {
+        duration: 2500,
+      });
+      this.resource.reload();
+      this.attendees.reload();
+      this.myAttendance.reload();
+    });
+
     effect((onCleanup) => {
       const code = this.qrResource.hasValue() ? this.qrResource.value().qr_code : undefined;
       if (!code || !isPlatformBrowser(this.platformId)) {
@@ -95,9 +126,15 @@ export class EventDetail {
 
       let active = true;
       this.qrImageError.set(false);
+      const qrPayload = JSON.stringify({
+        event_id: this.id(),
+        qr_code: code,
+        title: this.evento()?.title,
+      });
+
       void import('qrcode')
         .then(({ default: QRCode }) =>
-          QRCode.toDataURL(code, { errorCorrectionLevel: 'M', margin: 2, width: 256 }),
+          QRCode.toDataURL(qrPayload, { errorCorrectionLevel: 'M', margin: 2, width: 256 }),
         )
         .then((image) => {
           if (active) this.qrImage.set(image);
@@ -156,19 +193,50 @@ export class EventDetail {
       });
   }
 
-  registrarAsistencia() {
+  async registrarAsistencia() {
     const event = this.evento();
     if (!event || this.busy() || this.registered()) return;
     this.busy.set(true);
+
+    let coords: { latitude: number; longitude: number } | undefined;
+    try {
+      const pos = await this.geoService.getCurrentPosition();
+      coords = { latitude: pos.latitude, longitude: pos.longitude };
+    } catch {
+      // Fallback: Si no hay GPS disponible o fue denegado, se registra igualmente
+    }
+
+    if (coords && event.latitude !== null && event.longitude !== null) {
+      const val = this.geoService.validateDistanceToEvent(
+        coords.latitude,
+        coords.longitude,
+        event.latitude,
+        event.longitude,
+        event.radius_m,
+      );
+      if (val && !val.withinRadius) {
+        this.snackBar.open(
+          `⚠️ Estás a ${val.formattedDistance} del evento (radio: ${event.radius_m}m). Registrando...`,
+          'Entendido',
+          { duration: 4500 },
+        );
+      }
+    }
+
     this.service
-      .attendEvent(event.id)
+      .attendEvent(event.id, coords)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
         finalize(() => this.busy.set(false)),
       )
       .subscribe({
-        next: () => {
-          this.snackBar.open('Asistencia registrada', 'Cerrar', { duration: 3500 });
+        next: (attendance) => {
+          const locText = attendance.latitude
+            ? ` con GPS (${attendance.latitude}, ${attendance.longitude})`
+            : '';
+          this.snackBar.open(`¡Asistencia registrada con éxito${locText}!`, 'Cerrar', {
+            duration: 4000,
+          });
           this.resource.reload();
           this.attendees.reload();
           this.myAttendance.reload();
@@ -180,5 +248,33 @@ export class EventDetail {
           if (error.status === 409) this.myAttendance.reload();
         },
       });
+  }
+
+  escanearQR() {
+    const ref = this.dialog.open(QrScannerDialog, {
+      width: '480px',
+      maxWidth: '95vw',
+      disableClose: false,
+    });
+
+    ref.afterClosed().subscribe((res: ScanResult | null) => {
+      if (!res) return;
+
+      if (res.eventId && res.eventId !== this.id()) {
+        this.snackBar
+          .open(`El código QR corresponde a otro evento (#${res.eventId})`, 'Ver evento', {
+            duration: 5000,
+          })
+          .onAction()
+          .subscribe(() => {
+            this.router.navigate(['/eventos', res.eventId]);
+          });
+      } else {
+        this.snackBar.open('¡Código QR validado para este evento!', 'Cerrar', { duration: 3000 });
+        if (!this.registered()) {
+          void this.registrarAsistencia();
+        }
+      }
+    });
   }
 }

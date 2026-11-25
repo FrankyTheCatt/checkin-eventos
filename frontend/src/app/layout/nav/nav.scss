@@ -26,6 +26,12 @@ nav {
 .active {
   background: var(--mat-sys-secondary-container);
 }
+.scan-nav-btn {
+  color: var(--mat-sys-primary);
+  mat-icon {
+    margin-right: 4px;
+  }
+}
 @media (max-width: 600px) {
   mat-toolbar {
     justify-content: center;

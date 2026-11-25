@@ -52,6 +52,21 @@
           ></mat-form-field
         >
       </div>
+      <div class="gps-row">
+        <button
+          mat-stroked-button
+          color="accent"
+          type="button"
+          (click)="usarUbicacionGPS()"
+          [disabled]="obteniendoGPS()"
+        >
+          <mat-icon>my_location</mat-icon>
+          {{ obteniendoGPS() ? 'Obteniendo GPS...' : 'Usar mi ubicación GPS actual' }}
+        </button>
+        @if (gpsMensaje()) {
+          <span class="gps-hint">{{ gpsMensaje() }}</span>
+        }
+      </div>
       @if (
         form.hasError('coordinates') &&
         (form.controls.latitude.touched || form.controls.longitude.touched)

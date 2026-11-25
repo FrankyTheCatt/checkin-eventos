@@ -5,9 +5,14 @@
       <h1>Explorar eventos</h1>
       <p>Descubre actividades y registra tu asistencia en un solo lugar.</p>
     </div>
-    <button mat-flat-button (click)="abrirModalCrear()">
-      <mat-icon>add</mat-icon>Crear evento
-    </button>
+    <div class="header-actions">
+      <button mat-stroked-button color="primary" (click)="abrirEscaner()">
+        <mat-icon>qr_code_scanner</mat-icon>Escanear QR
+      </button>
+      <button mat-flat-button (click)="abrirModalCrear()">
+        <mat-icon>add</mat-icon>Crear evento
+      </button>
+    </div>
   </div>
   <div class="filters">
     <mat-form-field subscriptSizing="dynamic" appearance="outline">
@@ -65,5 +70,9 @@
     >
       Siguiente
     </button>
+  </div>
+  <div class="sensor-bar">
+    <span><mat-icon>vibration</mat-icon> Acelerómetro activo: Agita el dispositivo para recargar</span>
+    <button mat-button type="button" (click)="motionService.simulateShake()">Simular agitar</button>
   </div>
 </section>

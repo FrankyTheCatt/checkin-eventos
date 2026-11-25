@@ -1,0 +1,144 @@
+.scanner-dialog {
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  width: 100%;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px 0;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 1.25rem;
+  }
+}
+
+.dialog-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #fff3e0;
+  color: #e65100;
+  border-radius: 6px;
+  font-size: 0.875rem;
+
+  p {
+    margin: 0;
+  }
+}
+
+.camera-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .camera-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.loading-overlay {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  z-index: 2;
+}
+
+.scanner-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 2;
+
+  .scan-target {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    border: 2px solid #2196f3;
+    border-radius: 12px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+
+    .laser {
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: #f44336;
+      box-shadow: 0 0 8px #f44336;
+      animation: scanLaser 2s infinite ease-in-out;
+    }
+  }
+
+  .scan-hint {
+    margin-top: 16px;
+    color: #fff;
+    font-size: 0.875rem;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  }
+}
+
+@keyframes scanLaser {
+  0%, 100% {
+    top: 5%;
+  }
+  50% {
+    top: 95%;
+  }
+}
+
+.alternative-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  .file-upload-btn {
+    cursor: pointer;
+    span {
+      border: 1px solid #ccc;
+      padding: 6px 12px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.manual-input-section {
+  margin-top: 4px;
+
+  .full-width {
+    width: 100%;
+  }
+}
