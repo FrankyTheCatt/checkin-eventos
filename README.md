@@ -123,12 +123,30 @@ npm run build
 
 Las pruebas del backend usan SQLite en memoria por defecto y no modifican la base de desarrollo.
 
-## App Android
+## App Android (Taller 3)
 
-La app Angular se empaqueta como aplicación Android con Capacitor. Primero se genera un build
-estático de la web, sin SSR (`npm run build:mobile`); luego `cap sync` copia esa web al proyecto
-nativo `frontend/android/` y Gradle arma el APK. La app instalada en el teléfono usa la API de
-producción (Railway), por lo que no necesita el backend local.
+La app Angular se empaqueta como aplicación Android nativa utilizando **Capacitor**, incorporando funcionalidades de hardware y sensores del dispositivo móvil integradas al flujo de check-in:
+
+### Capacidades Móviles Implementadas
+
+1. **Cámara y Lectura de Códigos QR (RA5 - 15%):**
+   * Escaneo en tiempo real mediante cámara con visor interactivo en pantalla y detección con `jsQR`.
+   * Opción alternativa mediante el plugin `@capacitor/camera` para capturar foto o seleccionar imagen de código QR desde la galería.
+   * Al escanear el QR generado por el organizador de un evento, la app identifica automáticamente el evento y valida la asistencia.
+
+2. **Ubicación GPS y Geolocalización (RA5 - 15% / RA6 - 10%):**
+   * Integración con `@capacitor/geolocation` (y Web Geolocation API como fallback).
+   * Al crear o editar eventos, permite pulsar *"Usar mi ubicación GPS actual"* para registrar las coordenadas del lugar.
+   * Al registrar asistencia, obtiene las coordenadas reales del dispositivo y valida si el asistente se encuentra dentro del radio permitido (`radius_m`) mediante la fórmula de Haversine. Las coordenadas quedan registradas y persistidas en el backend (`attendances`).
+
+3. **Sensor del Dispositivo: Acelerómetro (RA5 - 15%):**
+   * Detección de movimiento mediante `@capacitor/motion` (y `DeviceMotionEvent`).
+   * Funcionalidad **"Shake to Refresh" (Agitar para recargar)**: Al sacudir el teléfono en la lista de eventos o en el detalle de un evento, los datos y asistentes se actualizan automáticamente con aviso visual (`MatSnackBar`).
+   * Incluye botón para simular agitar el dispositivo en entornos de prueba o navegadores de escritorio.
+
+4. **Gestión de Permisos y Manejo de Errores (RA5 - 5%):**
+   * Permisos declarados en `AndroidManifest.xml` (`CAMERA`, `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`).
+   * Solicitud en tiempo de ejecución, con retroalimentación clara si el usuario rechaza permisos y métodos alternativos (código manual, carga de archivo).
 
 ### Requisitos
 
@@ -155,13 +173,15 @@ Activa la depuración USB en el teléfono, conéctalo al computador y, desde `fr
 `npx cap run android` para instalar y abrir la app. Con `npx cap open android` se abre el
 proyecto en Android Studio para ejecutarlo desde ahí.
 
-### Descargar el APK desde GitHub Actions
+### Descargar el APK desde GitHub Actions (CI/CD)
 
-1. Abre la pestaña **Actions** del repositorio.
-2. Entra al workflow **APK Android** y elige la última ejecución.
-3. Descarga el artefacto `checkin-eventos-debug-apk`.
+El repositorio cuenta con integración continua configurada en `.github/workflows/android.yml`:
+1. Ante cada `push` a la rama principal (`main`) o ejecución manual (`workflow_dispatch`), GitHub Actions compila automáticamente Angular en modo móvil, sincroniza con Capacitor y compila el APK con Gradle.
+2. Abre la pestaña **Actions** del repositorio en GitHub.
+3. Entra a la última ejecución del workflow **APK Android**.
+4. Descarga el artefacto generado: `checkin-eventos-debug-apk`.
 
 ### CORS
 
-El backend debe permitir los orígenes `https://localhost` y `capacitor://localhost` en
+El backend permite los orígenes `https://localhost` y `capacitor://localhost` en
 `CORS_ORIGINS` para que la app Android pueda llamar a la API. Ya vienen incluidos por defecto.

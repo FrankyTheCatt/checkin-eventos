@@ -1,0 +1,71 @@
+<div class="scanner-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>
+      <mat-icon>qr_code_scanner</mat-icon>
+      Escanear Código QR
+    </h2>
+    <button mat-icon-button (click)="cerrar()" aria-label="Cerrar escáner">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="dialog-body">
+    @if (errorMensaje()) {
+      <div class="error-banner" role="alert">
+        <mat-icon>warning</mat-icon>
+        <p>{{ errorMensaje() }}</p>
+      </div>
+    }
+
+    <!-- Vista de la cámara en vivo -->
+    <div class="camera-container" [class.active]="camaraActiva()">
+      <video #videoElement playsinline muted class="camera-video"></video>
+      <canvas #canvasElement style="display: none;"></canvas>
+
+      @if (camaraActiva()) {
+        <div class="scanner-overlay">
+          <div class="scan-target">
+            <span class="laser"></span>
+          </div>
+          <p class="scan-hint">Apunta la cámara al código QR del evento</p>
+        </div>
+      } @else if (iniciandoCamara()) {
+        <div class="loading-overlay">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Iniciando cámara...</p>
+        </div>
+      }
+    </div>
+
+    <!-- Opciones alternativas: Tomar foto o subir imagen -->
+    <div class="alternative-actions">
+      <button mat-stroked-button color="primary" type="button" (click)="usarCapacitorCamera()" [disabled]="procesando()">
+        <mat-icon>photo_camera</mat-icon>
+        Tomar foto / Galería
+      </button>
+
+      <label class="file-upload-btn">
+        <input type="file" accept="image/*" (change)="cargarDesdeArchivo($event)" style="display: none;" />
+        <span mat-stroked-button>
+          <mat-icon>image</mat-icon>
+          Seleccionar archivo
+        </span>
+      </label>
+    </div>
+
+    <!-- Fallback manual -->
+    <div class="manual-input-section">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>O ingresa el código manualmente</mat-label>
+        <input matInput [(ngModel)]="codigoManual" placeholder="Ej: 5 o código único" />
+        <button mat-icon-button matSuffix (click)="confirmarManual()" [disabled]="!codigoManual.trim()">
+          <mat-icon>send</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="cerrar()">Cancelar</button>
+  </mat-dialog-actions>
+</div>

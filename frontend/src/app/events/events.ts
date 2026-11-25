@@ -42,7 +42,11 @@ export class EventsService {
     return this.http.delete<void>(this.url + '/' + id);
   }
 
-  attendEvent(id: number) {
-    return this.http.post<Attendance>(this.url + '/' + id + '/attendances', {});
+  attendEvent(id: number, coords?: { latitude: number; longitude: number }) {
+    return this.http.post<Attendance>(this.url + '/' + id + '/attendances', coords ?? {});
+  }
+
+  getEventByQr(qrCode: string) {
+    return this.http.get<EventRecord>(this.url + '/by-qr/' + encodeURIComponent(qrCode));
   }
 }

@@ -45,6 +45,16 @@
               <dt>Radio del lugar</dt>
               <dd>{{ event.radius_m }} metros</dd>
             </div>
+            @if (distanceInfo(); as dist) {
+              <div class="distance-field" [class.within]="dist.withinRadius">
+                <dt>Distancia a tu GPS</dt>
+                <dd>
+                  {{ dist.formattedDistance }} ({{
+                    dist.withinRadius ? 'Estás dentro del radio' : 'Fuera del radio'
+                  }})
+                </dd>
+              </div>
+            }
           }
         </dl>
       </mat-card-content>
@@ -58,6 +68,9 @@
           >{{
             registered() ? 'Asistencia registrada' : busy() ? 'Procesando…' : 'Registrar asistencia'
           }}
+        </button>
+        <button mat-stroked-button color="primary" [disabled]="busy()" (click)="escanearQR()">
+          <mat-icon>qr_code_scanner</mat-icon>Escanear QR del evento
         </button>
         @if (isOwner()) {
           <button mat-stroked-button [disabled]="busy()" (click)="editar()">
@@ -73,8 +86,7 @@
       <section class="event-qr" aria-labelledby="event-qr-title">
         <h2 id="event-qr-title">Código QR del evento</h2>
         <p>
-          Este QR muestra el código único del evento. El registro de asistencia todavía se realiza
-          con el botón.
+          Los asistentes pueden escanear este código QR con la cámara de su teléfono para registrar su asistencia y validar su ubicación GPS.
         </p>
         @if (qrResource.isLoading()) {
           <div class="loading-state" role="status">
@@ -129,5 +141,9 @@
         }
       </section>
     }
+    <div class="sensor-bar">
+      <span><mat-icon>vibration</mat-icon> Acelerómetro activo: Agita el teléfono para recargar</span>
+      <button mat-button type="button" (click)="motionService.simulateShake()">Simular agitar</button>
+    </div>
   }
 </section>

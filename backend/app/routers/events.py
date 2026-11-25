@@ -56,6 +56,14 @@ def create_event(data: EventCreate, user: CurrentUser, session: SessionDep):
     return read_event(event, session)
 
 
+@router.get("/by-qr/{qr_code}", response_model=EventRead)
+def get_event_by_qr(qr_code: str, user: CurrentUser, session: SessionDep):
+    event = session.exec(select(Event).where(Event.qr_code == qr_code)).first()
+    if event is None:
+        raise HTTPException(404, "No se encontró ningún evento asociado a este código QR")
+    return read_event(event, session)
+
+
 @router.get("/{event_id}", response_model=EventRead)
 def get_event(event_id: int, user: CurrentUser, session: SessionDep):
     return read_event(find_event(event_id, session), session)
